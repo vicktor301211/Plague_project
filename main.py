@@ -14,12 +14,12 @@ plagues_counter = 0
 
 
 def init_plagues():
-    global plague_counter
+    global plagues_counter
     plagues = [
         Plague(
             name="Холера",
             type="бактерия",
-            lethality=1.9,
+            lethality=2,
             incubation_period=1,
             is_vaccine=True,
             image="holera.png",
@@ -28,7 +28,7 @@ def init_plagues():
         Plague(
             name="Ветряная Оспа(ветрянка)",
             type="вирус",
-            lethality=0.001,
+            lethality=0,
             incubation_period=21,
             is_vaccine=True,
             image="vetryanka.png",
@@ -46,9 +46,9 @@ def init_plagues():
     ]
 
     for plague in plagues:
-        plague_counter += 1
-        plague.id = plague_counter
-        plagues_db[plague_counter] = plague.model_dump()
+        plagues_counter += 1
+        plague.id = plagues_counter
+        plagues_db[plagues_counter] = plague.model_dump()
 
 
 # ✅ Правильный lifespan с подключением

@@ -3,15 +3,584 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>Коллекция болезней</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Заголовок */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Сетка карточек */
+        .plagues-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Карточка болезни */
+        .plague-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .plague-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        /* Изображение */
+        .plague-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plague-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .plague-image .placeholder {
+            font-size: 4rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Бейджи */
+        .badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge.virus { background: #e74c3c; }
+        .badge.bacteria { background: #3498db; }
+        .badge.prion { background: #9b59b6; }
+
+        /* Контент карточки */
+        .plague-content {
+            padding: 20px;
+        }
+
+        .plague-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .plague-type {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px solid #ecf0f1;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .vaccine-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 15px 0;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .vaccine-status.available {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .vaccine-status.not-available {
+            background: #ffe6e6;
+            color: #e74c3c;
+        }
+
+        .description {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-top: 15px;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            color: #2c3e50;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #7f8c8d;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #e74c3c;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        /* Загрузка */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Ошибка */
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        /* Статистика */
+        .footer-stats {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .plagues-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
     </style>
-
-
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>🦠 Коллекция болезней</h1>
+            <p>Изучите самые опасные заболевания мира</p>
+        </div>
 
+        <div id="plaguesGrid" class="plagues-grid">
+            <div class="loading">Загрузка данных...</div>
+        </div>
 
+        <div class="footer-stats" id="footerStats"></div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Детали болезни</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-image" id="modalImage">
+                    <div class="placeholder">🔬</div>
+                </div>
+                <div class="modal-stats" id="modalStats"></div>
+                <div id="modalDescription" class="description"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Базовый URL API (можно изменить под свой сервер)
+        const API_BASE_URL = window.location.origin;
+
+        // Состояние
+        let plagues = [];
+
+        // Функция для получения типа болезни на русском
+        function getTypeName(type) {
+            const types = {
+                'вирус': 'вирус',
+                'бактерия': 'бактерия',
+                'прион': 'прион'
+            };
+            return types[type.toLowerCase()] || type;
+        }
+
+        // Функция для получения класса бейджа
+        function getBadgeClass(type) {
+            const typeLower = type.toLowerCase();
+            if (typeLower === 'вирус') return 'virus';
+            if (typeLower === 'бактерия') return 'bacteria';
+            if (typeLower === 'прион') return 'prion';
+            return '';
+        }
+
+        // Форматирование периода инкубации
+        function formatIncubation(days) {
+            if (days >= 365) {
+                const years = Math.floor(days / 365);
+                const remainingDays = days % 365;
+                if (remainingDays === 0) return `${years} год(а)`;
+                return `${years} год(а) ${remainingDays} дн.`;
+            }
+            if (days >= 30) {
+                const months = Math.floor(days / 30);
+                const remainingDays = days % 30;
+                if (remainingDays === 0) return `${months} мес.`;
+                return `${months} мес. ${remainingDays} дн.`;
+            }
+            return `${days} дн.`;
+        }
+
+        // Рендер карточек
+        function renderPlagues() {
+            const grid = document.getElementById('plaguesGrid');
+
+            if (plagues.length === 0) {
+                grid.innerHTML = '<div class="error">😷 Нет данных о болезнях</div>';
+                return;
+            }
+
+            grid.innerHTML = plagues.map(plague => `
+                <div class="plague-card" onclick="showPlagueDetails(${plague.id})">
+                    <div class="plague-image">
+                        <img src="/static/images/${plague.image || 'placeholder.png'}"
+                             alt="${plague.name}"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Ctext x=\'50\' y=\'55\' text-anchor=\'middle\' font-size=\'40\'%3E🦠%3C/text%3E%3C/svg%3E'">
+                        <span class="badge ${getBadgeClass(plague.type)}">${getTypeName(plague.type)}</span>
+                    </div>
+                    <div class="plague-content">
+                        <div class="plague-name">${escapeHtml(plague.name)}</div>
+                        <div class="plague-type">${getTypeName(plague.type)}</div>
+                        <div class="stats">
+                            <div class="stat">
+                                <div class="stat-value">${plague.lethality}%</div>
+                                <div class="stat-label">летальность</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${formatIncubation(plague.incubation_period)}</div>
+                                <div class="stat-label">инкубация</div>
+                            </div>
+                        </div>
+                        <div class="vaccine-status ${plague.is_vaccine ? 'available' : 'not-available'}">
+                            ${plague.is_vaccine ? '💉 Вакцина существует' : '⚠️ Вакцины нет'}
+                        </div>
+                        <div class="description">
+                            ${plague.description ? escapeHtml(plague.description) : 'Описание отсутствует'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Обновляем статистику в футере
+            const footerStats = document.getElementById('footerStats');
+            const total = plagues.length;
+            const withVaccine = plagues.filter(p => p.is_vaccine).length;
+            const avgLethality = (plagues.reduce((sum, p) => sum + p.lethality, 0) / total).toFixed(1);
+            footerStats.innerHTML = `📊 Всего болезней: ${total} | 💉 С вакциной: ${withVaccine} | ⚠️ Средняя летальность: ${avgLethality}%`;
+        }
+
+        // Показать детали в модальном окне
+        function showPlagueDetails(plagueId) {
+            const plague = plagues.find(p => p.id === plagueId);
+            if (!plague) return;
+
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalImage = document.getElementById('modalImage');
+            const modalStats = document.getElementById('modalStats');
+            const modalDescription = document.getElementById('modalDescription');
+
+            modalTitle.textContent = plague.name;
+
+            modalImage.innerHTML = `
+                <img src="/static/images/${plague.image || 'placeholder.png'}"
+                     alt="${plague.name}"
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Ctext x=\'50\' y=\'55\' text-anchor=\'middle\' font-size=\'40\'%3E🔬%3C/text%3E%3C/svg%3E'">
+            `;
+
+            modalStats.innerHTML = `
+                <div class="stat">
+                    <div class="stat-value">${plague.lethality}%</div>
+                    <div class="stat-label">летальность</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${formatIncubation(plague.incubation_period)}</div>
+                    <div class="stat-label">инкубационный период</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${getTypeName(plague.type)}</div>
+                    <div class="stat-label">тип возбудителя</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${plague.is_vaccine ? '✅ Да' : '❌ Нет'}</div>
+                    <div class="stat-label">наличие вакцины</div>
+                </div>
+            `;
+
+            modalDescription.innerHTML = plague.description || 'Описание отсутствует';
+
+            modal.classList.add('active');
+        }
+
+        // Закрыть модальное окно
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('active');
+        }
+
+        // Закрытие по клику вне окна
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Закрытие по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Экранирование HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Загрузка данных с API
+        async function loadPlagues() {
+            const grid = document.getElementById('plaguesGrid');
+
+            try {
+                // Пытаемся загрузить с API
+                const response = await fetch(`${API_BASE_URL}/api/plagues`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                plagues = data;
+                renderPlagues();
+
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+
+                // Если API недоступен, используем демо-данные
+                grid.innerHTML = '<div class="loading">Используем локальные данные...</div>';
+
+                // Демо-данные на случай, если сервер не отвечает
+                setTimeout(() => {
+                    plagues = [
+                        {
+                            id: 1,
+                            name: "Холера",
+                            type: "бактерия",
+                            lethality: 2,
+                            incubation_period: 1,
+                            is_vaccine: true,
+                            image: "holera.png",
+                            description: "Бактерия холеры, распространяющаяся в странах Африки"
+                        },
+                        {
+                            id: 2,
+                            name: "Ветряная Оспа (ветрянка)",
+                            type: "вирус",
+                            lethality: 0,
+                            incubation_period: 21,
+                            is_vaccine: true,
+                            image: "vetryanka.png",
+                            description: "Вирус ветряной оспы, распространённый по всему миру"
+                        },
+                        {
+                            id: 3,
+                            name: "БКЯ (Болезнь Крейтцфельдта — Якоба)",
+                            type: "прион",
+                            lethality: 100,
+                            incubation_period: 365,
+                            is_vaccine: false,
+                            image: "bkya.png",
+                            description: "Болезнь Крейтцфельдта - Якоба. Распространена в Северной и Южной Америке"
+                        }
+                    ];
+                    renderPlagues();
+                }, 500);
+            }
+        }
+
+        // Инициализация
+        loadPlagues();
+    </script>
 </body>
 </html>
